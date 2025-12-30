@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volvo EX30 | Connected Garage</title>
+    <style>
+        /* --- THEME: Volvo Editorial (Clean & Minimal) --- */
+        :root {
+            --bg-body: #f4f4f4;   
+            --bg-card: #ffffff;
+            
+            --text-main: #141414; /* Volvo Black */
+            --text-sub: #707070;  /* Volvo Grey */
+            
+            --accent: #D8DE8C;    /* Moss Yellow */
+            
+            --success: #3a8246;   /* Muted Green */
+            --warning: #cc7a00;   /* Muted Orange */
+            --error: #d12e2e;
+            
+            --font-stack: "Volvo Novum", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            
+            --radius-l: 12px;
+            --radius-m: 8px;
+            
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.04);
+            --shadow-hover: 0 12px 30px rgba(0,0,0,0.08);
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- 0. UNOFFICIAL DISCLAIMER --- */
+        .top-disclaimer {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            background: rgba(0,0,0,0.05);
+            padding: 8px;
+            border-radius: 4px;
+            align-self: center;
+            margin-bottom: 10px;
+        }
+
+        /* --- 1. HERO WINDOW --- */
+        .hero-window {
+            background: var(--bg-card);
+            border-radius: var(--radius-l);
+            box-shadow: var(--shadow-soft);
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            overflow: hidden;
+            min-height: 420px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .hero-window:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        @media (max-width: 750px) {
+            .hero-window { grid-template-columns: 1fr; grid-template-rows: 300px auto; }
+        }
+
+        .hero-visual {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #e0e0e0;
+            overflow: hidden;
+        }
+
+        .car-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+            object-position: 75% center; 
+            transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .hero-window:hover .car-img { transform: scale(1.02); }
+
+        .brand-tag {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 16px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .volvo-logo { height: 12px; display: block; }
+
+        .hero-details {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: white;
+        }
+
+        .details-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .details-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-sub);
+        }
+
+        .spec-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spec-item { display: flex; flex-direction: column; gap: 4px; }
+        .spec-label { font-size: 10px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
+        .spec-value { font-size: 15px; font-weight: 500; color: var(--text-main); }
+
+        .api-status-text {
+            font-size: 10px;
+            font-weight: 600;
+            color: #ccc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .api-status-text.found { color: var(--success); }
+
+        /* --- 2. CONTROL BAR --- */
+        .control-bar {
+            display: flex;
+            gap: 0;
+            background: var(--bg-card);
+            padding: 0;
+            border-radius: var(--radius-l);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+            height: 56px;
+        }
+
+        .vin-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0 25px;
+            color: var(--text-main);
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: 500;
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .vin-input::placeholder { color: #ccc; letter-spacing: normal; font-family: var(--font-stack); }
+
+        .check-btn {
+            background: var(--text-main); 
+            color: white;
+            border: none;
+            padding: 0 40px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .check-btn:hover { background: #000; }
+
+        /* --- 3. BULLETIN REPORT (Redesigned) --- */
+        .report-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-l);
+            box-shadow: var(--shadow-soft);
+            padding: 50px;
+            min-height: 200px;
+            text-align: left; /* Ensure alignment */
+        }
+
+        /* The Header Row */
+        .report-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--text-main);
+            padding-bottom: 20px;
+        }
+
+        /* Left Side: Status & Date */
+        .status-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-badge {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-badge.orange { background: #fff4e5; color: var(--warning); }
+        .status-badge.green { background: #e8fceb; color: var(--success); }
+        .status-badge.red { background: #ffebeb; color: var(--error); }
+        
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+        .date-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            padding-left: 15px;
+            border-left: 1px solid #ddd;
+        }
+
+        /* Document Content */
+        .document-wrapper { animation: fadeIn 0.4s ease; }
+
+        .doc-meta {
+            margin-bottom: 20px;
+            font-size: 11px;
+            color: var(--text-sub);
+            font-family: monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .doc-headline {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            line-height: 1.3;
+            color: var(--text-main);
+        }
+
+        .doc-body {
+            font-size: 16px;
+            line-height: 1.7;
+            color: #333;
+            max-width: 750px;
+            text-align: left;
+        }
+        
+        /* Better paragraph spacing */
+        .doc-body p { margin-bottom: 24px; }
+        
+        /* Stronger bold text */
+        .doc-body strong { 
+            font-weight: 700; 
+            color: #000; 
+            display: inline-block;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-sub);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid #ccc;
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to {transform: rotate(360deg);} }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="top-disclaimer">
+        ⚠️ Unofficial API Client • Not Affiliated with Volvo Cars
+    </div>
+
+    <div class="hero-window">
+        <div class="hero-visual">
+            <div class="brand-tag">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/29/Volvo-Iron-Mark-Black.svg" class="volvo-logo" alt="Volvo">
+            </div>
+            <img src="https://hips.hearstapps.com/hmg-prod/images/2025-volvo-ex30-101-647e32d3ac380.jpg?crop=0.800xw:0.534xh;0.183xw,0.107xh" 
+                 alt="Volvo EX30" class="car-img">
+        </div>
+
+        <div class="hero-details">
+            <div class="details-header">
+                <span class="details-title">Vehicle Specification</span>
+                <span id="api-status" class="api-status-text">Waiting</span>
+            </div>
+            
+            <div class="spec-grid" id="specs-area">
+                <div class="spec-item">
+                    <span class="spec-label">Model</span>
+                    <span class="spec-value" style="color:#ddd">---</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Model Year</span>
+                    <span class="spec-value" style="color:#ddd">---</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Manufacturer</span>
+                    <span class="spec-value" style="color:#ddd">---</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Assembly Plant</span>
+                    <span class="spec-value" style="color:#ddd">---</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-bar">
+        <input type="text" id="vinInput" class="vin-input" value="YV12ZEL92RS007582" maxlength="17" placeholder="VIN Number">
+        <button id="checkBtn" class="check-btn" onclick="runDiagnostics()">Check Status</button>
+    </div>
+
+    <div class="report-section">
+        <div class="report-header">
+            <div class="status-group">
+                <div id="status-badge" class="status-badge" style="background:#eee; color:#999;">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Pending Scan</span>
+                </div>
+                <div id="date-display" class="date-label" style="display:none;">
+                    </div>
+            </div>
+        </div>
+        
+        <div id="report-content" class="empty-state">
+            Enter a Vehicle Identification Number above to check for official safety or quality bulletins.
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const PROXIES = ["https://api.allorigins.win/raw?url=", "https://corsproxy.io/?"];
+    const VOLVO_API = "https://support-car-content.volvo.care/api/car-content/QUALITY_BULLETIN/";
+    const NHTSA_API = "https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/";
+
+    async function runDiagnostics() {
+        const vin = document.getElementById('vinInput').value.trim();
+        const btn = document.getElementById('checkBtn');
+
+        if (vin.length !== 17) {
+            alert("Please ensure the VIN is 17 characters.");
+            return;
+        }
+
+        // Loading UI
+        btn.innerHTML = '<span class="spinner"></span>';
+        btn.style.pointerEvents = 'none';
+        
+        document.getElementById('report-content').innerHTML = '<div class="empty-state"><span class="spinner"></span> Accessing Volvo database...</div>';
+        document.getElementById('specs-area').style.opacity = '0.5';
+
+        // Reset Header
+        updateHeader('pending', 'Scanning...', null);
+
+        await Promise.all([
+            decodeVin(vin),
+            checkRecall(vin)
+        ]);
+
+        btn.innerHTML = 'Check Status';
+        btn.style.pointerEvents = 'auto';
+        document.getElementById('specs-area').style.opacity = '1';
+    }
+
+    // --- Header Updater Helper ---
+    function updateHeader(type, text, dateString) {
+        const badge = document.getElementById('status-badge');
+        const badgeText = document.getElementById('status-text');
+        const dateDisplay = document.getElementById('date-display');
+
+        // Reset classes
+        badge.className = 'status-badge';
+        
+        if (type === 'green') {
+            badge.classList.add('green');
+            badgeText.innerText = text || "No Issues Found";
+        } else if (type === 'orange') {
+            badge.classList.add('orange');
+            badgeText.innerText = text || "Action Required";
+        } else if (type === 'red') {
+            badge.classList.add('red');
+            badgeText.innerText = text || "Error";
+        } else {
+            badge.style.background = '#eee';
+            badge.style.color = '#999';
+            badgeText.innerText = text || "Pending";
+        }
+
+        // Date Handling
+        if (dateString) {
+            const d = new Date(dateString);
+            if (!isNaN(d.getTime())) {
+                dateDisplay.style.display = 'block';
+                dateDisplay.innerText = d.toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' });
+            }
+        } else {
+            dateDisplay.style.display = 'none';
+        }
+    }
+
+    // --- NHTSA Decoder ---
+    async function decodeVin(vin) {
+        const statusText = document.getElementById('api-status');
+        const specsArea = document.getElementById('specs-area');
+
+        try {
+            const url = `${NHTSA_API}${vin}?format=json`;
+            const req = await fetch(url);
+            const data = await req.json();
+
+            if (data.Results && data.Results.length > 0) {
+                const info = data.Results[0];
+                statusText.className = "api-status-text found";
+                statusText.innerText = "Verified";
+
+                specsArea.innerHTML = `
+                    <div class="spec-item">
+                        <span class="spec-label">Model</span>
+                        <span class="spec-value">${info.Make || 'VOLVO'} ${info.Model || 'EX30'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Model Year</span>
+                        <span class="spec-value">${info.ModelYear || '2025'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Manufacturer</span>
+                        <span class="spec-value">${info.Manufacturer || 'Volvo Car Corp'}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Assembly Plant</span>
+                        <span class="spec-value">${info.PlantCity || 'Unknown'}</span>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            statusText.innerText = "Error";
+        }
+    }
+
+    // --- Volvo Checker ---
+    async function checkRecall(vin) {
+        const reportContent = document.getElementById('report-content');
+
+        try {
+            const listData = await fetchWithRetry(VOLVO_API + vin);
+
+            if (!listData || listData.trim() === "[]") {
+                // CLEAR
+                updateHeader('green', 'All Systems Normal', null);
+                reportContent.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size:18px; color:#000; font-weight:600; margin-bottom:10px;">No Active Bulletins</div>
+                        <div>Your vehicle has no open quality bulletins or recall campaigns at this time.</div>
+                    </div>
+                `;
+            } else {
+                const data = JSON.parse(listData);
+                if (data.content && data.content.length > 0) {
+                    const engItem = data.content.find(d => d.language === 'en-US') || data.content.find(d => d.language === 'en-GB');
+                    
+                    if (engItem) {
+                        const detailRaw = await fetchWithRetry(engItem.url);
+                        const detail = JSON.parse(detailRaw);
+                        
+                        // Render and Update Header with Date
+                        renderDocument(detail);
+                        updateHeader('orange', 'Action Required', engItem.createdAt);
+                        
+                    } else {
+                        updateHeader('orange', 'Data Unavailable', null);
+                        reportContent.innerHTML = `<div class="empty-state">Bulletin exists but language data is missing.</div>`;
+                    }
+                } else {
+                    updateHeader('green', 'All Systems Normal', null);
+                    reportContent.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size:18px; color:#000; font-weight:600; margin-bottom:10px;">No Active Bulletins</div>
+                            <div>No bulletins found.</div>
+                        </div>
+                    `;
+                }
+            }
+        } catch (err) {
+            updateHeader('red', 'Network Error', null);
+            reportContent.innerHTML = `<div class="empty-state" style="color:var(--error)">Could not retrieve data from Volvo servers.</div>`;
+        }
+    }
+
+    function renderDocument(data) {
+        const reportContent = document.getElementById('report-content');
+        
+        let html = ``;
+        if (data.documents) {
+            data.documents.forEach(doc => {
+                html += `
+                    <div class="document-wrapper">
+                        <div class="doc-meta">
+                            REF: ${doc.qbNumber} / VER: ${doc.version}
+                        </div>
+                        <div class="doc-headline">${doc.title}</div>
+                        <div class="doc-body">${parseBody(doc.body)}</div>
+                        <div style="margin-top:40px; border-top:1px solid #eee; padding-top:20px; font-size:11px; color:#999;">
+                            OFFICIAL COMMUNICATION • VOLVO CAR CORPORATION
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        reportContent.innerHTML = html;
+    }
+
+    async function fetchWithRetry(url) {
+        for (const proxy of PROXIES) {
+            try {
+                const res = await fetch(proxy + encodeURIComponent(url));
+                if (!res.ok) {
+                    if (res.status === 404 || res.status === 204) return "[]";
+                    throw new Error('HTTP Error');
+                }
+                return await res.text();
+            } catch (e) {}
+        }
+        throw new Error('All proxies failed');
+    }
+
+    function parseBody(node) {
+        if (!node) return '';
+        if (Array.isArray(node)) return node.map(parseBody).join('');
+        if (node.type === 'paragraph') return `<p>${parseBody(node.children)}</p>`;
+        if (node.type === 'text') {
+            let t = Array.isArray(node.children) ? parseBody(node.children) : node.children;
+            return node.options && node.options.includes('bold') ? `<strong>${t}</strong>` : t;
+        }
+        if (node.children) return parseBody(node.children);
+        return typeof node === 'string' ? node : '';
+    }
+</script>
+
+</body>
+</html>
